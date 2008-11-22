@@ -1,5 +1,4 @@
 #labels Featured
-#Project news page
 
 = News =
 
