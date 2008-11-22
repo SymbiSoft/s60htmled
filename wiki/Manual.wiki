@@ -7,8 +7,21 @@
 
 = About =
 
+*S60 HTML Editor* is a simple but powerfull text editor for _Symbian S60_ devices. The main feature of the editor is fast and easy inserting HTML tags and entities.
+
+The editor is written in *Python* programming language.
+
+Copyright (C) Dmitri Brechalov, 2008
+
 = Requirements And Installation =
 
+You *MUST* have [http://opensource.nokia.com/projects/pythonfors60/ Python for S60] installed on your device first.
+
+You *MUST* have [http://opensource.nokia.com/projects/pythonfors60/ appuifw2] extension module installed on your device as well.
+
+Currently, the program is deployed as a single Python script. You should download the latest release and put the file {{{s60htmled.py}}} to the folder {{{!:Python}}} on your device.
+
+Then start Python interpreter, press left softkey for the menu and select *Run script*. Select the scripts and press *OK*
 
 = Main Screen =
 
