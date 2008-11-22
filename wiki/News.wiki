@@ -1,0 +1,7 @@
+#labels Featured
+#Project news page
+
+= News =
+
+  * *2008-11-22* Versions 0.1 and 0.2 released for historical reasons
+  * *2008-11-20* The project launched. Third beta released.
