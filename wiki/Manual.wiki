@@ -3,17 +3,15 @@
 
 = Contents =
 
-<wiki:toc max_depth="2" />
+<wiki:toc max_depth="1" />
 
 = About =
 
 = Requirements And Installation =
 
 
-= Usage =
+= Main Screen =
 
-== Main Screen ==
+= Main Menu =
 
-== Main Menu ==
-
-== Hot Keys ==
+= Hot Keys =
