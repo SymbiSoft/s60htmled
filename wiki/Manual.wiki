@@ -7,9 +7,11 @@
 
 = About =
 
-*S60 HTML Editor* is a simple text editor for _Symbian S60_ devices destined for editing HTML files. The main feature of the editor is fast and easy inserting HTML tags and entities.
+*S60 HTML Editor* is a simple text editor for _Symbian S60_ devices designed for editing HTML files. The major feature of the editor is fast and easy inserting HTML tags and entities.
 
 The editor is written in *Python* programming language.
+
+This manual describes version 0.3 of the editor.
 
 Copyright (C) Dmitri Brechalov, 2008
 
@@ -35,3 +37,23 @@ The editor uses *Call* key as a functional key. Press:
 To insert any HTML tag press *Right softley*. Select a tag from tag menu or press *Custom...* and type your own.
 
 = Main Menu =
+
+Press *Options* to open the main menu.
+   * *Insert tag* - Open tags menu. You can quickly insert any tag you want. See below for detail.
+   * *Insert entity* - Open entities menu. You can quickly insert the most often HTML entities.
+   * *Search* - Open find and replace menu:
+     * *Find* - Find the first occurence of entered text. Search starts from current position of cursor.
+     * *Find next* - Find the next occurence of the same text.
+     * *Replace* - Find and replace the first occurence of the text with another text string.
+   * *File* - File operations:
+     * *Save* - Save the file. For new files asks for the file name and path.
+     * *Save as* - Save the text in another file. Asks for the name and the path.
+     * *Open* - Load file. The current text will be replaced with contents of selected file.
+     * *New* - Drop all text and clear the editor.
+     * *New from template* - You can select simple HTML and HTML 4.0 transitional templates for the new file.
+   * *Help* - Short help.
+     * *Help* - Display short help on the major functions of the editor.
+     * *About* - Show copyright info.
+   * *Exit* - Close the editor and return to OS.
+
+= HTML Tag Insertion =
