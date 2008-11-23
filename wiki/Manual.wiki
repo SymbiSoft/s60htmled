@@ -57,3 +57,10 @@ Press *Options* to open the main menu.
    * *Exit* - Close the editor and return to OS.
 
 = HTML Tag Insertion =
+
+= Screenshots =
+
+|| http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/MainWindow.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/MainMenu.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/FileBrowser.jpg ||
+|| Main Window || Main Menu || File Browser ||
+|| http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/QuickMoveMenu.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/TagMenu.jpg || ||
+|| Quick Move Menu || Tag Selection Menu || ||
