@@ -80,7 +80,7 @@ def fileBrowser(label, dironly=False, dirname=''):
 class HTMLEditor:
     '''HTML Editor. Uses appuifw2.Text
     '''
-    version = '0.4a'
+    version = '0.4b'
     title = u('HTML Editor %s' % (version))
     def __init__(self):
         self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
@@ -95,6 +95,7 @@ class HTMLEditor:
         self.old_indicator = self.editor.indicator_text
         self.text_pos = 0
         self.text_len = 0
+        self.funkey_timer = None
 
     def quit(self):
         if self.has_changed:
@@ -124,27 +125,42 @@ class HTMLEditor:
         self.bindFunKeys()
 
     def bindFunKeys(self):
+        in_time = (self.funkey_timer is not None)
+        if in_time:
+            self.funkey_timer.cancel()
+        self.funkey_timer = e32.Ao_timer()
+        self.funkey_timer.after(1.5, self.rebindFunKeys)
         pos = self.editor.get_pos()
         self.editor.bind(key_codes.EKeyUpArrow,    lambda : self.arrowKeyPressed(pos, appuifw2.EFPageUp))
         self.editor.bind(key_codes.EKeyDownArrow,  lambda : self.arrowKeyPressed(pos, appuifw2.EFPageDown))
         self.editor.bind(key_codes.EKeyLeftArrow,  lambda : self.arrowKeyPressed(pos, appuifw2.EFLineBeg))
         self.editor.bind(key_codes.EKeyRightArrow, lambda : self.arrowKeyPressed(pos, appuifw2.EFLineEnd))
         self.editor.bind(key_codes.EKeySelect,     self.moveMenu)
-        self.editor.bind(key_codes.EKeyYes,        self.unbindFunKeys)
-#        self.editor.focus = False
+        self.editor.bind(key_codes.EKeyYes,        self.rebindFunKeys)
         self.old_indicator = self.editor.indicator_text
+        appuifw2.app.exit_key_handler = self.rightSoftkeyPressed
+        appuifw2.app.exit_key_text = u("Entity")
         self.editor.indicator_text = u('Func')
         
-    def unbindFunKeys(self):
+    def rebindFunKeys(self):
+        in_time = (self.funkey_timer is not None)
+        if in_time:
+            self.funkey_timer.cancel()
+            self.funkey_timer = None
         for key in (key_codes.EKeyUpArrow, key_codes.EKeyDownArrow, key_codes.EKeyLeftArrow, key_codes.EKeyRightArrow, key_codes.EKeySelect):
             self.editor.bind(key, None)
         self.editor.bind(key_codes.EKeyYes, self.yesKeyPressed)
-#         self.editor.focus = True
         self.editor.indicator_text = self.old_indicator
-                
+        appuifw2.app.exit_key_handler = self.insertTag
+        appuifw2.app.exit_key_text = u("Tag")
+
     def arrowKeyPressed(self, pos, cmd):
-        self.unbindFunKeys()
+        self.rebindFunKeys()
         schedule(self.moveCursor, pos, cmd)
+
+    def rightSoftkeyPressed(self):
+        self.rebindFunKeys()
+        schedule(self.insertEntity)
 
     def moveCursor(self, pos, cmd):
         self.editor.set_pos(pos)
@@ -165,8 +181,8 @@ class HTMLEditor:
             schedule(self.moveToLine, ans)
 
     def moveMenu(self):
+        self.rebindFunKeys()
         ans = appuifw2.popup_menu([u('Top'), u('Bottom'), u('Goto line')])
-        self.unbindFunKeys()
         if ans is not None:
             if ans == 0:
                 schedule(self.moveCursor, 0, appuifw2.EFNoMovement)
@@ -385,20 +401,25 @@ class HTMLEditor:
         self.doFind(u"\u2029")
 
     def run(self):
-        self.editor.bind(key_codes.EKeyYes, self.yesKeyPressed)
-        appuifw2.app.menu = [(u("Insert Tag..."), self.insertTag),
-                             (u("Insert Entity..."), self.insertEntity),
-                             (u("Search"), ((u("Find..."), self.findText),
-                                            (u("Find next"), self.findNext),
-                                            (u("Replace..."), self.replaceText))),
-                             (u("File"), ((u("Save"), self.fileSave),
-                                          (u("Save as..."), self.fileSaveAs),
-                                          (u("Open..."), self.fileOpen),
-                                          (u("New"), self.fileNew),
-                                          (u("New from template"), self.fileTemplate))),
-                             (u("Help"), ((u("Help"), self.helpDlg),
-                                          (u("About"), self.aboutDlg),)),
-                             (u("Exit"), self.quit)]
+        appuifw2.app.menu = [
+            (u("File"), ((u("Save"), self.fileSave),
+                         (u("Save as..."), self.fileSaveAs),
+                         (u("Open..."), self.fileOpen),
+                         (u("New"), self.fileNew),
+                         (u("New from template"), self.fileTemplate))),
+            (u("Edit"), ((u("Undo"), self.dummy),
+                         (u("Cut"), self.dummy),
+                         (u("Copy"), self.dummy),
+                         (u("Paste"), self.dummy),
+                         (u("Select All"), self.dummy),
+                         (u("Select None"), self.dummy))),
+            (u("Search"), ((u("Find Forward"), self.findText),
+                           (u("Find Backward"), self.dummy),
+                           (u("Replace..."), self.replaceText))),
+            (u("Help"), ((u("Help"), self.helpDlg),
+                         (u("About"), self.aboutDlg),)),
+            (u("Exit"), self.quit)
+            ]
         self.fileNew()
 
         # create an Active Object
@@ -407,9 +428,10 @@ class HTMLEditor:
         # set the application body to Text
         appuifw2.app.body = self.editor
 
-        appuifw2.app.exit_key_handler = self.insertTag
         old_exit_key_text = appuifw2.app.exit_key_text
-        appuifw2.app.exit_key_text = u("Tag")
+        old_menu_key_text = appuifw2.app.menu_key_text
+        appuifw2.app.menu_key_text = u("Options")
+        self.rebindFunKeys()
         self.app_lock.wait()
         appuifw2.app.exit_key_text = old_exit_key_text
 
