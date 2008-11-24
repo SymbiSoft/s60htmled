@@ -107,7 +107,7 @@ class HTMLEditor:
         self.updateIndicator()
 
     def moveEvent(self):
-        schedule(self.updateIndicator())
+        schedule(self.updateIndicator)
 
     def updateIndicator(self):
         try:
