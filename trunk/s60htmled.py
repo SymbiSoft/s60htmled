@@ -156,6 +156,7 @@ class HTMLEditor:
         schedule(self.moveCursor, pos, cmd)
 
     def rightSoftkeyPressed(self):
+        self.rebindFunKeys()
         schedule(self.insertEntity)
 
     def moveCursor(self, pos, cmd):
@@ -402,9 +403,9 @@ class HTMLEditor:
 
     def run(self):
         appuifw2.app.menu = [
-            (u("File"), ((u("Save"), self.fileSave),
-                         (u("Save as..."), self.fileSaveAs),
-                         (u("Open..."), self.fileOpen),
+            (u("File"), ((u("Open"), self.fileOpen),
+                         (u("Save"), self.fileSave),
+                         (u("Save as"), self.fileSaveAs),
                          (u("New"), self.fileNew),
                          (u("New from template"), self.fileTemplate))),
             (u("Edit"), ((u("Undo"), self.dummy),
@@ -415,7 +416,7 @@ class HTMLEditor:
                          (u("Select None"), self.dummy))),
             (u("Search"), ((u("Find Forward"), self.findTextForward),
                            (u("Find Backward"), self.findTextBackward),
-                           (u("Replace..."), self.replaceText))),
+                           (u("Replace"), self.replaceText))),
             (u("Help"), ((u("Help"), self.helpDlg),
                          (u("About"), self.aboutDlg),)),
             (u("Exit"), self.quit)
