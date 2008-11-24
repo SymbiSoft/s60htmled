@@ -19,7 +19,7 @@ Copyright (C) Dmitri Brechalov, 2008
 
 You *must* have [http://opensource.nokia.com/projects/pythonfors60/ Python for S60] installed on your device first.
 
-You *must* have [http://opensource.nokia.com/projects/pythonfors60/ appuifw2] extension module installed on your device as well.
+You *must* have [http://code.google.com/p/appuifw2/ appuifw2] extension module installed on your device as well.
 
 Currently, the program is deployed as a single Python script. You should download the latest release and put the file {{{s60htmled.py}}} to the folder {{{!:Python}}} on your device.
 
