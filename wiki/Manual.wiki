@@ -58,6 +58,12 @@ Press *Options* to open the main menu.
 
 = HTML Tag Insertion =
 
+To insert an HTML tag press *Right softke* (labeled *Tag*), select a tag and press *OK*. To select a tag you can simply scroll the list, or start typing to quickly find the necessary tag.
+
+Also, you can use *Custom...* option - just type the tag you need and press *OK*.
+
+The editor has a trivial control of opened tags for many tags. When you select the same tag next time, the editor will insert appropriate closing tag. For example, you want to insert a link into your text. You have selected *a href* from the menu for the first time, and you have recieved a string `<a href="">|` in your text. Then you have typed an URL and a label text. Now you have the following text: `<a href="http://code.google.com/">Google Code|` (Vertical line marks the cursor position). Now, to enter a closing tag, select *a href* once more and you will get: `<a href="http://code.google.com/">Google Code</a>|`. That's all!
+
 = Screenshots =
 
 || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/MainWindow.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/MainMenu.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/FileBrowser.jpg ||
