@@ -14,7 +14,6 @@
 import appuifw2
 import e32
 import key_codes
-import keycapture
 import os
 
 htmltemplates = (
@@ -81,10 +80,10 @@ def fileBrowser(label, dironly=False, dirname=''):
 class HTMLEditor:
     '''HTML Editor. Uses appuifw2.Text
     '''
-    version = '0.3'
+    version = '0.4a'
     title = u('HTML Editor %s' % (version))
     def __init__(self):
-        self.editor = appuifw2.Text(edit_callback=self.changeEvent, skinned=True)
+        self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
         self.editor.style = appuifw2.STYLE_BOLD
 #         self.editor.color = (0, 0, 0)
         self.fname = None
@@ -94,6 +93,8 @@ class HTMLEditor:
         self.replace_text = u('')
         self.has_changed = False
         self.old_indicator = self.editor.indicator_text
+        self.text_pos = 0
+        self.text_len = 0
 
     def quit(self):
         if self.has_changed:
@@ -104,6 +105,20 @@ class HTMLEditor:
     def changeEvent(self, pos, num):
         if num != 0:
             self.has_changed = True
+            self.text_len += num
+        self.updateIndicator()
+
+    def moveEvent(self):
+        self.updateIndicator()
+
+    def updateIndicator(self):
+        self.text_pos = self.editor.get_pos()
+        self.text_len = self.editor.len()
+        try:
+            pos = int(round(float(self.text_pos) / float(self.text_len) * 100))
+        except ZeroDivisionError:
+            pos = 0
+        self.editor.indicator_text = u('%3s %%' % pos)
 
     def yesKeyPressed(self):
         self.bindFunKeys()
@@ -134,6 +149,7 @@ class HTMLEditor:
     def moveCursor(self, pos, cmd):
         self.editor.set_pos(pos)
         self.editor.move(cmd)
+        self.moveEvent()
 
     def moveToLine(self, line):
         self.editor.focus = False
@@ -141,6 +157,7 @@ class HTMLEditor:
         for i in range(line-1):
             self.editor.move(appuifw2.EFLineDown)
         self.editor.focus = True
+        self.moveEvent()
 
     def gotoLine(self):
         ans = appuifw2.query(u("Goto line"), 'number', 1)
@@ -157,9 +174,10 @@ class HTMLEditor:
                 schedule(self.moveCursor, len(self.editor.get()), appuifw2.EFNoMovement)
             elif ans == 2:
                 schedule(self.gotoLine)
+        self.moveEvent()
 
     def aboutDlg(self):
-        appuifw2.query(u('S60 HTML Editor\nVersion %s\nCopyright (c) DiMobile, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
+        appuifw2.query(u('S60 HTML Editor\nVersion %s\nCopyright (c) Dmitri Brechalov, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
         
     def helpDlg(self):
         topics = (u('Call button works as functional key.\nCall + arrows: Page Up, Page Down, Line Start and Line End.'),
@@ -191,6 +209,9 @@ class HTMLEditor:
         appuifw2.app.title = self.title
         self.fname = None
         self.has_changed = False
+        self.text_pos = 0
+        self.text_len = 0
+        self.updateIndicator()
 
     def fileTemplate(self):
         ans = appuifw2.popup_menu([u('Simple HTML'), u('HTML 4.01 Transitional')], u('Select template'))
@@ -208,13 +229,16 @@ class HTMLEditor:
         try:
             self.editor.set(u(open(self.fname, 'r').read()))
             self.editor.set_pos(0)
+            self.text_pos = 0
+            self.text_len = self.editor.len()
+            self.updateIndicator()
         except:
             appuifw2.note(u('Cannot read file %s!' % self.fname), 'error')
             self.fileNew()
     
     def doSave(self):
         try:
-            open(self.fname, 'w').write(s(self.editor.get()))
+            open(self.fname, 'w').write(s(self.editor.get().replace(u"\u2029", u'\r\n')))
             self.has_changed = False
             return True
         except:
@@ -332,6 +356,7 @@ class HTMLEditor:
         ed.delete(pos, len(self.find_text))
         ed.set_pos(pos)
         ed.add(txt)
+        ed.set_pos(pos + len(txt))
     
     def findText(self):
         ans = appuifw2.query(u("Find"), "text", self.find_text)
