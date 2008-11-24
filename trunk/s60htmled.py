@@ -80,7 +80,7 @@ def fileBrowser(label, dironly=False, dirname=''):
 class HTMLEditor:
     '''HTML Editor. Uses appuifw2.Text
     '''
-    version = '0.4b'
+    version = '0.4'
     title = u('HTML Editor %s' % (version))
     def __init__(self):
         self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
