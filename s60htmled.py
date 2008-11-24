@@ -93,8 +93,6 @@ class HTMLEditor:
         self.replace_text = u('')
         self.has_changed = False
         self.old_indicator = self.editor.indicator_text
-        self.text_pos = 0
-        self.text_len = 0
         self.funkey_timer = None
 
     def quit(self):
@@ -106,20 +104,19 @@ class HTMLEditor:
     def changeEvent(self, pos, num):
         if num != 0:
             self.has_changed = True
-            self.text_len += num
         self.updateIndicator()
 
     def moveEvent(self):
-        self.updateIndicator()
+        schedule(self.updateIndicator())
 
     def updateIndicator(self):
-        self.text_pos = self.editor.get_pos()
-        self.text_len = self.editor.len()
         try:
-            pos = int(round(float(self.text_pos) / float(self.text_len) * 100))
+            text_pos = self.editor.get_pos()
+            text_len = self.editor.len()
+            pos = int(round(float(text_pos) / float(text_len) * 100))
         except ZeroDivisionError:
             pos = 0
-        self.editor.indicator_text = u('%3s %%' % pos)
+        self.editor.indicator_text = u('%s%%' % pos)
 
     def yesKeyPressed(self):
         self.bindFunKeys()
@@ -148,7 +145,7 @@ class HTMLEditor:
             self.funkey_timer.cancel()
             self.funkey_timer = None
         for key in (key_codes.EKeyUpArrow, key_codes.EKeyDownArrow, key_codes.EKeyLeftArrow, key_codes.EKeyRightArrow, key_codes.EKeySelect):
-            self.editor.bind(key, None)
+            self.editor.bind(key, lambda : None)
         self.editor.bind(key_codes.EKeyYes, self.yesKeyPressed)
         self.editor.indicator_text = self.old_indicator
         appuifw2.app.exit_key_handler = self.insertTag
@@ -159,7 +156,6 @@ class HTMLEditor:
         schedule(self.moveCursor, pos, cmd)
 
     def rightSoftkeyPressed(self):
-        self.rebindFunKeys()
         schedule(self.insertEntity)
 
     def moveCursor(self, pos, cmd):
@@ -199,7 +195,8 @@ class HTMLEditor:
         topics = (u('Call button works as functional key.\nCall + arrows: Page Up, Page Down, Line Start and Line End.'),
                   u('Press Call + Select to go to the top/bottom of the text or goto line.'),
                   u('Press right softkey to select and insert HTML tag.\nSelect the same tag once more to insert close tag.'),
-                  u('Select "Custom tag" to insert any tag.')
+                  u('Select "Custom tag" to insert any tag.'),
+                  u('Press Call + Right softkey to insert HTML entity.'),
                  )
         for t in topics:
             if not appuifw2.query(t, 'query', ok=u('Next'), cancel=u('Close')):
@@ -225,9 +222,7 @@ class HTMLEditor:
         appuifw2.app.title = self.title
         self.fname = None
         self.has_changed = False
-        self.text_pos = 0
-        self.text_len = 0
-        self.updateIndicator()
+        self.moveEvent()
 
     def fileTemplate(self):
         ans = appuifw2.popup_menu([u('Simple HTML'), u('HTML 4.01 Transitional')], u('Select template'))
@@ -245,9 +240,7 @@ class HTMLEditor:
         try:
             self.editor.set(u(open(self.fname, 'r').read()))
             self.editor.set_pos(0)
-            self.text_pos = 0
-            self.text_len = self.editor.len()
-            self.updateIndicator()
+            self.moveEvent()
         except:
             appuifw2.note(u('Cannot read file %s!' % self.fname), 'error')
             self.fileNew()
@@ -354,13 +347,20 @@ class HTMLEditor:
             self.hdr = ans + 1
             self.editor.add(u('<h%s>' % self.hdr))
             
-    def doFind(self, find_text):
-        txt = self.editor.get()[self.editor.get_pos():]
-#        print repr(txt)
-        i = txt.find(find_text)
+    def doFind(self, find_text, fwd=True):
+        if fwd:
+            txt = self.editor.get()[self.editor.get_pos():]
+            i = txt.find(find_text)
+        else:
+            txt = self.editor.get()[:self.editor.get_pos()-1]
+            i = txt.rfind(find_text)
         if i >= 0:
-            pos = self.editor.get_pos() + i + len(find_text)
+            if fwd:
+                pos = self.editor.get_pos() + i + len(find_text)
+            else:
+                pos = i + len(find_text)
             self.editor.set_pos(pos)
+            self.moveEvent()
             return True
         appuifw2.note(u("Not found"), "info")
         return False
@@ -368,24 +368,24 @@ class HTMLEditor:
     def doReplace(self, txt):
         ed = self.editor
         pos = ed.get_pos()-len(self.find_text)
-#        ed.set_pos(ed.get_pos())
         ed.delete(pos, len(self.find_text))
         ed.set_pos(pos)
         ed.add(txt)
         ed.set_pos(pos + len(txt))
     
-    def findText(self):
-        ans = appuifw2.query(u("Find"), "text", self.find_text)
+    def findTextForward(self):
+        ans = appuifw2.query(u("Find forward"), "text", self.find_text)
         if ans is None: return
         self.find_text = ans
         if self.doFind(self.find_text):
             pos = self.editor.get_pos()
             self.editor.set_selection(pos, pos-len(self.find_text))
         
-    def findNext(self):
-        if self.find_text:
-            self.findText()
-        if self.doFind(self.find_text):
+    def findTextBackward(self):
+        ans = appuifw2.query(u("Find backward"), "text", self.find_text)
+        if ans is None: return
+        self.find_text = ans
+        if self.doFind(self.find_text, False):
             pos = self.editor.get_pos()
             self.editor.set_selection(pos, pos-len(self.find_text))
         
@@ -413,19 +413,15 @@ class HTMLEditor:
                          (u("Paste"), self.dummy),
                          (u("Select All"), self.dummy),
                          (u("Select None"), self.dummy))),
-            (u("Search"), ((u("Find Forward"), self.findText),
-                           (u("Find Backward"), self.dummy),
+            (u("Search"), ((u("Find Forward"), self.findTextForward),
+                           (u("Find Backward"), self.findTextBackward),
                            (u("Replace..."), self.replaceText))),
             (u("Help"), ((u("Help"), self.helpDlg),
                          (u("About"), self.aboutDlg),)),
             (u("Exit"), self.quit)
             ]
         self.fileNew()
-
-        # create an Active Object
         self.app_lock = e32.Ao_lock()
-
-        # set the application body to Text
         appuifw2.app.body = self.editor
 
         old_exit_key_text = appuifw2.app.exit_key_text
