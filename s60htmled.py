@@ -80,7 +80,7 @@ def fileBrowser(label, dironly=False, dirname=''):
 class HTMLEditor:
     '''HTML Editor. Uses appuifw2.Text
     '''
-    version = '0.4'
+    version = '0.5a'
     title = u('HTML Editor %s' % (version))
     def __init__(self):
         self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
@@ -397,9 +397,39 @@ class HTMLEditor:
         self.replace_text = ans[1]
         if self.doFind(self.find_text):
             self.doReplace(self.replace_text)
+    
+    def selectAll(self):
+        self.editor.select_all()
+        
+    def selectNone(self):
+        self.editor.clear_selection()
         
     def findEOL(self):
         self.doFind(u"\u2029")
+    
+    def cut(self):
+        if self.editor.can_cut():
+            self.editor.cut()
+        else:
+            appuifw2.note(u("Can't cut!"), "error")
+
+    def copy(self):
+        if self.editor.can_copy():
+            self.editor.copy()
+        else:
+            appuifw2.note(u("Can't copy!"), "error")
+
+    def paste(self):
+        if self.editor.can_paste():
+            self.editor.paste()
+        else:
+            appuifw2.note(u("Can't paste!"), "error")
+
+    def undo(self):
+        if self.editor.can_undo():
+            self.editor.undo()
+        else:
+            appuifw2.note(u("Can't undo!"), "error")
 
     def run(self):
         appuifw2.app.menu = [
@@ -408,12 +438,12 @@ class HTMLEditor:
                          (u("Save as"), self.fileSaveAs),
                          (u("New"), self.fileNew),
                          (u("New from template"), self.fileTemplate))),
-            (u("Edit"), ((u("Undo"), self.dummy),
-                         (u("Cut"), self.dummy),
-                         (u("Copy"), self.dummy),
-                         (u("Paste"), self.dummy),
-                         (u("Select All"), self.dummy),
-                         (u("Select None"), self.dummy))),
+            (u("Edit"), ((u("Undo"), self.undo),
+                         (u("Cut"), self.cut),
+                         (u("Copy"), self.copy),
+                         (u("Paste"), self.paste),
+                         (u("Select All"), self.selectAll),
+                         (u("Select None"), self.selectNone))),
             (u("Search"), ((u("Find Forward"), self.findTextForward),
                            (u("Find Backward"), self.findTextBackward),
                            (u("Replace"), self.replaceText))),
