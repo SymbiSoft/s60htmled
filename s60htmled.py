@@ -80,7 +80,7 @@ def fileBrowser(label, dironly=False, dirname=''):
 class HTMLEditor:
     '''HTML Editor. Uses appuifw2.Text
     '''
-    version = '0.5a'
+    version = '0.5b'
     title = u('HTML Editor %s' % (version))
     def __init__(self):
         self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
@@ -91,19 +91,20 @@ class HTMLEditor:
         self.hdr = None
         self.find_text = u('')
         self.replace_text = u('')
-        self.has_changed = False
         self.old_indicator = self.editor.indicator_text
         self.funkey_timer = None
+    
+    def notSaved(self):
+        if self.editor.has_changed:
+            return appuifw2.query(u('File has been changed. Save?'), 'query', ok=u('Yes'), cancel=u('No'))
+        return False
 
     def quit(self):
-        if self.has_changed:
-            if appuifw2.query(u('Save before exit?'), 'query', ok=u('Yes'), cancel=u('No')):
-                if not self.fileSave(): return
+        if self.notSaved():
+            if not self.fileSave(): return
         self.app_lock.signal()
 
     def changeEvent(self, pos, num):
-        if num != 0:
-            self.has_changed = True
         self.updateIndicator()
 
     def moveEvent(self):
@@ -219,29 +220,36 @@ class HTMLEditor:
             return fileBrowser('Select file')
 
     def fileNew(self):
+        if self.notSaved():
+            if not self.fileSave(): return
         self.editor.clear()
         appuifw2.app.title = self.title
         self.fname = None
-        self.has_changed = False
         self.moveEvent()
+        self.editor.has_changed = False
 
     def fileTemplate(self):
+        if self.notSaved():
+            if not self.fileSave(): return
         ans = appuifw2.popup_menu([u('Simple HTML'), u('HTML 4.01 Transitional')], u('Select template'))
         if ans is None: return
         self.fileNew()
         self.editor.set(u(htmltemplates[ans]))
         self.editor.set_pos(0)
+        self.editor.has_changed = False
         
     def fileOpen(self):
+        if self.notSaved():
+            if not self.fileSave(): return
         ans = self.fileDialog()
         if not ans: return
         self.fname = ans
         appuifw2.app.title = u(os.path.split(self.fname)[1])
-        self.has_changed = False
         try:
             self.editor.set(u(open(self.fname, 'r').read()))
             self.editor.set_pos(0)
             self.moveEvent()
+            self.editor.has_changed = False
         except:
             appuifw2.note(u('Cannot read file %s!' % self.fname), 'error')
             self.fileNew()
@@ -249,7 +257,7 @@ class HTMLEditor:
     def doSave(self):
         try:
             open(self.fname, 'w').write(s(self.editor.get().replace(u"\u2029", u'\r\n')))
-            self.has_changed = False
+            self.editor.has_changed = False
             return True
         except:
             appuifw2.note(u('Cannot write file %s!' % self.fname), 'error')
@@ -451,6 +459,7 @@ class HTMLEditor:
                          (u("About"), self.aboutDlg),)),
             (u("Exit"), self.quit)
             ]
+        self.editor.has_changed = False
         self.fileNew()
         self.app_lock = e32.Ao_lock()
         appuifw2.app.body = self.editor
