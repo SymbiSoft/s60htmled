@@ -43,8 +43,7 @@ htmltemplates = (
 u = lambda s: s.decode('utf-8')
 s = lambda s: s.encode('utf-8')
 
-def schedule(target, *args, **kwargs):
-    e32.ao_sleep(0, lambda: target(*args, **kwargs))
+schedule = appuifw2.schedule
 
 def fileBrowser(label, dironly=False, dirname=''):
     isdir = lambda fname: os.path.isdir(os.path.join(dirname, fname))
@@ -80,7 +79,7 @@ def fileBrowser(label, dironly=False, dirname=''):
 class HTMLEditor:
     '''HTML Editor. Uses appuifw2.Text
     '''
-    version = '0.5b'
+    version = '0.5'
     title = u('HTML Editor %s' % (version))
     def __init__(self):
         self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
