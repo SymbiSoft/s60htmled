@@ -76,11 +76,9 @@ def fileBrowser(label, dironly=False, dirname=''):
         else:
             return fname
 
-class HTMLEditor:
-    '''HTML Editor. Uses appuifw2.Text
+class xText(object):
+    '''eXtended Text editor
     '''
-    version = '0.5'
-    title = u('HTML Editor %s' % (version))
     def __init__(self):
         self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
         self.editor.style = appuifw2.STYLE_BOLD
@@ -92,16 +90,14 @@ class HTMLEditor:
         self.replace_text = u('')
         self.old_indicator = self.editor.indicator_text
         self.funkey_timer = None
+
+    def dummy(self):
+        appuifw2.note(u('Not implmented yet!'), 'error')
     
     def notSaved(self):
         if self.editor.has_changed:
             return appuifw2.query(u('File has been changed. Save?'), 'query', ok=u('Yes'), cancel=u('No'))
         return False
-
-    def quit(self):
-        if self.notSaved():
-            if not self.fileSave(): return
-        self.app_lock.signal()
 
     def changeEvent(self, pos, num):
         self.updateIndicator()
@@ -147,9 +143,14 @@ class HTMLEditor:
         for key in (key_codes.EKeyUpArrow, key_codes.EKeyDownArrow, key_codes.EKeyLeftArrow, key_codes.EKeyRightArrow, key_codes.EKeySelect):
             self.editor.bind(key, lambda : None)
         self.editor.bind(key_codes.EKeyYes, self.yesKeyPressed)
+        self.editor.bind(key_codes.EKeyStar, self.starKeyPressed)
         self.editor.indicator_text = self.old_indicator
         appuifw2.app.exit_key_handler = self.insertTag
         appuifw2.app.exit_key_text = u("Tag")
+
+    def starKeyPressed(self):
+        appuifw2.note(u('Star key pressed'))
+        e32.ao_yeld()
 
     def arrowKeyPressed(self, pos, cmd):
         self.rebindFunKeys()
@@ -189,6 +190,102 @@ class HTMLEditor:
                 schedule(self.gotoLine)
         self.moveEvent()
 
+    def doFind(self, find_text, fwd=True):
+        if fwd:
+            txt = self.editor.get()[self.editor.get_pos():]
+            i = txt.find(find_text)
+        else:
+            txt = self.editor.get()[:self.editor.get_pos()-1]
+            i = txt.rfind(find_text)
+        if i >= 0:
+            if fwd:
+                pos = self.editor.get_pos() + i + len(find_text)
+            else:
+                pos = i + len(find_text)
+            self.editor.set_pos(pos)
+            self.moveEvent()
+            return True
+        appuifw2.note(u("Not found"), "info")
+        return False
+    
+    def doReplace(self, txt):
+        ed = self.editor
+        pos = ed.get_pos()-len(self.find_text)
+        ed.delete(pos, len(self.find_text))
+        ed.set_pos(pos)
+        ed.add(txt)
+        ed.set_pos(pos + len(txt))
+    
+    def findTextForward(self):
+        ans = appuifw2.query(u("Find forward"), "text", self.find_text)
+        if ans is None: return
+        self.find_text = ans
+        if self.doFind(self.find_text):
+            pos = self.editor.get_pos()
+            self.editor.set_selection(pos, pos-len(self.find_text))
+        
+    def findTextBackward(self):
+        ans = appuifw2.query(u("Find backward"), "text", self.find_text)
+        if ans is None: return
+        self.find_text = ans
+        if self.doFind(self.find_text, False):
+            pos = self.editor.get_pos()
+            self.editor.set_selection(pos, pos-len(self.find_text))
+        
+    def replaceText(self):
+        ans = appuifw2.multi_query(u("Find"), u("Replace"))
+        if ans is None: return
+        self.find_text = ans[0]
+        self.replace_text = ans[1]
+        if self.doFind(self.find_text):
+            self.doReplace(self.replace_text)
+    
+    def selectAll(self):
+        self.editor.select_all()
+        
+    def selectNone(self):
+        self.editor.clear_selection()
+        
+    def findEOL(self):
+        self.doFind(u"\u2029")
+    
+    def cut(self):
+        if self.editor.can_cut():
+            self.editor.cut()
+        else:
+            appuifw2.note(u("Can't cut!"), "error")
+
+    def copy(self):
+        if self.editor.can_copy():
+            self.editor.copy()
+        else:
+            appuifw2.note(u("Can't copy!"), "error")
+
+    def paste(self):
+        if self.editor.can_paste():
+            self.editor.paste()
+        else:
+            appuifw2.note(u("Can't paste!"), "error")
+
+    def undo(self):
+        if self.editor.can_undo():
+            self.editor.undo()
+        else:
+            appuifw2.note(u("Can't undo!"), "error")
+
+class HTMLEditor(xText):
+    '''HTML Editor. Uses appuifw2.Text
+    '''
+    version = '0.6a'
+    title = u('HTML Editor %s' % (version))
+    def __init__(self):
+        xText.__init__(self)
+    
+    def quit(self):
+        if self.notSaved():
+            if not self.fileSave(): return
+        self.app_lock.signal()
+
     def aboutDlg(self):
         appuifw2.query(u('S60 HTML Editor\nVersion %s\nCopyright (c) Dmitri Brechalov, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
         
@@ -203,9 +300,6 @@ class HTMLEditor:
             if not appuifw2.query(t, 'query', ok=u('Next'), cancel=u('Close')):
                 break
 
-    def dummy(self):
-        appuifw2.note(u('Not implmented yet!'), 'error')
-    
     def fileDialog(self, allowNew=False):
         if allowNew:
             dirname = fileBrowser('Select directory', dironly=True)
@@ -355,89 +449,6 @@ class HTMLEditor:
             self.hdr = ans + 1
             self.editor.add(u('<h%s>' % self.hdr))
             
-    def doFind(self, find_text, fwd=True):
-        if fwd:
-            txt = self.editor.get()[self.editor.get_pos():]
-            i = txt.find(find_text)
-        else:
-            txt = self.editor.get()[:self.editor.get_pos()-1]
-            i = txt.rfind(find_text)
-        if i >= 0:
-            if fwd:
-                pos = self.editor.get_pos() + i + len(find_text)
-            else:
-                pos = i + len(find_text)
-            self.editor.set_pos(pos)
-            self.moveEvent()
-            return True
-        appuifw2.note(u("Not found"), "info")
-        return False
-    
-    def doReplace(self, txt):
-        ed = self.editor
-        pos = ed.get_pos()-len(self.find_text)
-        ed.delete(pos, len(self.find_text))
-        ed.set_pos(pos)
-        ed.add(txt)
-        ed.set_pos(pos + len(txt))
-    
-    def findTextForward(self):
-        ans = appuifw2.query(u("Find forward"), "text", self.find_text)
-        if ans is None: return
-        self.find_text = ans
-        if self.doFind(self.find_text):
-            pos = self.editor.get_pos()
-            self.editor.set_selection(pos, pos-len(self.find_text))
-        
-    def findTextBackward(self):
-        ans = appuifw2.query(u("Find backward"), "text", self.find_text)
-        if ans is None: return
-        self.find_text = ans
-        if self.doFind(self.find_text, False):
-            pos = self.editor.get_pos()
-            self.editor.set_selection(pos, pos-len(self.find_text))
-        
-    def replaceText(self):
-        ans = appuifw2.multi_query(u("Find"), u("Replace"))
-        if ans is None: return
-        self.find_text = ans[0]
-        self.replace_text = ans[1]
-        if self.doFind(self.find_text):
-            self.doReplace(self.replace_text)
-    
-    def selectAll(self):
-        self.editor.select_all()
-        
-    def selectNone(self):
-        self.editor.clear_selection()
-        
-    def findEOL(self):
-        self.doFind(u"\u2029")
-    
-    def cut(self):
-        if self.editor.can_cut():
-            self.editor.cut()
-        else:
-            appuifw2.note(u("Can't cut!"), "error")
-
-    def copy(self):
-        if self.editor.can_copy():
-            self.editor.copy()
-        else:
-            appuifw2.note(u("Can't copy!"), "error")
-
-    def paste(self):
-        if self.editor.can_paste():
-            self.editor.paste()
-        else:
-            appuifw2.note(u("Can't paste!"), "error")
-
-    def undo(self):
-        if self.editor.can_undo():
-            self.editor.undo()
-        else:
-            appuifw2.note(u("Can't undo!"), "error")
-
     def run(self):
         appuifw2.app.menu = [
             (u("File"), ((u("Open"), self.fileOpen),
