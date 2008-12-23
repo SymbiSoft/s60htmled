@@ -16,6 +16,8 @@ import e32
 import key_codes
 import os
 
+VERSION = '0.6'
+
 htmltemplates = (
     '''<html>
 <head>
@@ -276,7 +278,7 @@ class xText(object):
 class HTMLEditor(xText):
     '''HTML Editor. Uses appuifw2.Text
     '''
-    version = '0.6a'
+    version = VERSION
     title = u('HTML Editor %s' % (version))
     def __init__(self):
         xText.__init__(self)
@@ -285,6 +287,7 @@ class HTMLEditor(xText):
         if self.notSaved():
             if not self.fileSave(): return
         self.app_lock.signal()
+        appuifw2.app.set_exit()
 
     def aboutDlg(self):
         appuifw2.query(u('S60 HTML Editor\nVersion %s\nCopyright (c) Dmitri Brechalov, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
@@ -450,6 +453,7 @@ class HTMLEditor(xText):
             self.editor.add(u('<h%s>' % self.hdr))
             
     def run(self):
+        self.app_lock = e32.Ao_lock()
         appuifw2.app.menu = [
             (u("File"), ((u("Open"), self.fileOpen),
                          (u("Save"), self.fileSave),
@@ -471,7 +475,7 @@ class HTMLEditor(xText):
             ]
         self.editor.has_changed = False
         self.fileNew()
-        self.app_lock = e32.Ao_lock()
+        e32.ao_yield()
         appuifw2.app.body = self.editor
 
         old_exit_key_text = appuifw2.app.exit_key_text
