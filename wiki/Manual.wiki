@@ -66,7 +66,7 @@ The editor has a trivial control of opened tags for many tags. When you select t
 
 = Screenshots =
 
-|| http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/MainWindow.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/MainMenu.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/FileBrowser.jpg ||
+|| http://s60htmled.googlecode.com/svn/trunk/Screenshots/MainWindow.jpg || http://s60htmled.googlecode.com/svn/trunk/Screenshots/MainMenu.jpg || http://s60htmled.googlecode.com/svn/trunk/Screenshots/FileBrowser.jpg ||
 || Main Window || Main Menu || File Browser ||
 || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/QuickMoveMenu.jpg || http://s60htmled.googlecode.com/svn-history/r13/trunk/Screenshots/TagMenu.jpg || ||
 || Quick Move Menu || Tag Selection Menu || ||
