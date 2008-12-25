@@ -16,7 +16,7 @@ import e32
 import key_codes
 import os
 
-VERSION = '0.6'
+VERSION = '0.6.a'
 
 htmltemplates = (
     '''<html>
@@ -51,10 +51,15 @@ def fileBrowser(label, dironly=False, dirname=''):
     isdir = lambda fname: os.path.isdir(os.path.join(dirname, fname))
     isfile = lambda fname: not os.path.isdir(os.path.join(dirname, fname))
     markdir = lambda fname: fname + '/'
+    def chkdir(d):
+        d = s(d)
+        if not (d.endswith('/') or d.endswith('\\')):
+            return d + '/'
+        else:
+            return d
     while True:
         if not dirname:
-            items = e32.drive_list()
-            items = map(s, items)
+            items = map(chkdir, e32.drive_list())
         else:
             lst = os.listdir(dirname)
             dirs = map(markdir, filter(isdir, lst))
@@ -451,7 +456,13 @@ class HTMLEditor(xText):
             if ans is None: return
             self.hdr = ans + 1
             self.editor.add(u('<h%s>' % self.hdr))
-            
+
+    def launchBrowser(self):
+        if self.notSaved():
+            if not self.fileSave(): return
+        ch = appuifw2.Content_handler()
+        ch.open(u(self.fname.replace('/', '\\')))
+
     def run(self):
         self.app_lock = e32.Ao_lock()
         appuifw2.app.menu = [
@@ -459,7 +470,8 @@ class HTMLEditor(xText):
                          (u("Save"), self.fileSave),
                          (u("Save as"), self.fileSaveAs),
                          (u("New"), self.fileNew),
-                         (u("New from template"), self.fileTemplate))),
+                         (u("New from template"), self.fileTemplate),
+                         (u("View in browser"), self.launchBrowser),)),
             (u("Edit"), ((u("Undo"), self.undo),
                          (u("Cut"), self.cut),
                          (u("Copy"), self.copy),
