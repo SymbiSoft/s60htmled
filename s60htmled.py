@@ -51,11 +51,11 @@ def fileBrowser(label, dironly=False, dirname=''):
     isdir = lambda fname: os.path.isdir(os.path.join(dirname, fname))
     isfile = lambda fname: not os.path.isdir(os.path.join(dirname, fname))
     markdir = lambda fname: fname + '/'
-    def chkdir(d):
-        d = s(d)
+    def chkdir(d):      # os.path uses '/' as a dir separator but os.path.join
+        d = s(d)        # adds no '/' between drive name and file path
         if not (d.endswith('/') or d.endswith('\\')):
-            return d + '/'
-        else:
+            return d + '/'      # content handler return an error when there is
+        else:                   # no separator after drive name
             return d
     while True:
         if not dirname:
@@ -460,8 +460,7 @@ class HTMLEditor(xText):
     def launchBrowser(self):
         if self.notSaved():
             if not self.fileSave(): return
-        ch = appuifw2.Content_handler()
-        ch.open(u(self.fname.replace('/', '\\')))
+        appuifw2.Content_handler().open(u(self.fname.replace('/', '\\')))
 
     def run(self):
         self.app_lock = e32.Ao_lock()
