@@ -377,52 +377,65 @@ class HTMLEditor(xText):
         else:
             return self.doSave()
 
-    def appendTag(self, tag, tags=None):
-        if tags is None:
-            self.editor.add(u('<%s/>' % tag))
-        elif tag in tags:
-            tags.remove(tag)
-            self.editor.add(u('</%s>' % tag))
-        else:
-            tags.append(tag)
-            self.editor.add(u('<%s>' % tag))
-    
-    def insertLink(self, anchor=False):
-        if 'a' in self.tags:
-            self.editor.add(u('</a>'))
-            self.tags.remove('a')
-        else:
-            if anchor:
-                op = 'name'
-            else:
-                op = 'href'
-            self.editor.add(u('<a %s="">' % (op)))
-            self.tags.append('a')
-            
-    def insertImage(self):
-        self.editor.add(u('<img src=""/>'))
+    #### Working with tags
 
+    def attrjoin(self, attrs):
+        return ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.items() ])
+        
+    def addTag(self, tag, attrs=None, needCloseTag=True):
+        (pos, anchor, text) = self.editor.get_selection()
+        if attrs:
+            sattr = self.attrjoin(attrs)
+        else:
+            sattr = ''
+        if needCloseTag:
+            text = '<%s%s>%s</%s>' % (tag, sattr, s(text), tag)
+        else:
+            text = '<%s%s/>' % (tag, sattr)
+        if pos > anchor:
+            pos, anchor = anchor, pos
+        self.editor.delete(pos, anchor-pos)
+        self.editor.set_pos(pos)
+        self.editor.add(u(text))
+
+    def askAttr(self, tag):
+        result = dict()
+        while True:
+            ans = appuifw2.query(u("<%s%s...>\nAttribute:" % (tag, self.attrjoin(result))), 'text', )
+            if ans is None: break
+            result[s(ans).lower()] = ""
+        if len(result.keys()) == 0:
+            return None
+        return result
+    
     def insertTag(self):
-        tags = {'a href': self.insertLink,
-                'a name': lambda : self.insertLink(True),
-                'img': self.insertImage,
-                'h': self.insertHeader,
-                'strong': lambda : self.appendTag('strong', self.tags),
-                'em': lambda : self.appendTag('em', self.tags),
-                'code': lambda : self.appendTag('code', self.tags),
-                'pre': lambda : self.appendTag('pre', self.tags),
-                'u': lambda : self.appendTag('u', self.tags),
-                'p': lambda : self.appendTag('p', self.tags),
-                'ul': lambda : self.appendTag('ul', self.tags),
-                'ol': lambda : self.appendTag('ol', self.tags),
-                'li': lambda : self.appendTag('li', self.tags),
-                's': lambda : self.appendTag('s', self.tags),
-                'q': lambda : self.appendTag('q', self.tags),
-                'blockquote': lambda : self.appendTag('blockquote', self.tags),
-                'var': lambda : self.appendTag('var', self.tags),
-                'tt': lambda : self.appendTag('tt', self.tags),
-                'br': lambda : self.appendTag('br'),
-                'hr': lambda : self.appendTag('hr'),
+        ####    tag           (askForAttr, needCloseTag)
+        tags = {'a':          (True, True),
+                'img':        (True, False),
+                'h1':         (False, True),
+                'h2':         (False, True),
+                'h3':         (False, True),
+                'h4':         (False, True),
+                'h5':         (False, True),
+                'h6':         (False, True),
+                'strong':     (False, True),
+                'em':         (False, True),
+                'code':       (False, True),
+                'pre':        (False, True),
+                'u':          (False, True),
+                'b':          (False, True),
+                'i':          (False, True),
+                'p':          (True, True),
+                'ul':         (False, True),
+                'ol':         (False, True),
+                'li':         (False, True),
+                's':          (False, True),
+                'q':          (False, True),
+                'blockquote': (False, True),
+                'var':        (False, True),
+                'tt':         (False, True),
+                'br':         (False, False),
+                'hr':         (False, False),
                 }
         tlst = tags.keys()
         tlst.sort()
@@ -431,13 +444,20 @@ class HTMLEditor(xText):
         if ans == 0:
             self.insertCustomTag()
         else:
-            tags[tlst[ans-1]]()
+            tag = tlst[ans-1]
+            (askForAttr, needCloseTag) = tags[tag]
+            if askForAttr:
+                attr = self.askAttr(tag)
+            else:
+                attr = None
+            self.addTag(tag, attr, needCloseTag)
 
     def insertCustomTag(self):
         ans = appuifw2.query(u('HTML Tag:'), 'text')
         if not ans: return
         tag = s(ans).lower()
-        self.appendTag(tag, self.tags)
+        attr = self.askAttr(tag)
+        self.addTag(tag, attr, True)
 
     def insertEntity(self):
         ans = appuifw2.popup_menu(map(u, ('&', '<', '>', '"')))
@@ -446,16 +466,6 @@ class HTMLEditor(xText):
 
     def addEntity(self, ent):
         self.editor.add(u('&%s;' % ent))
-
-    def insertHeader(self):
-        if self.hdr is not None:
-            self.editor.add(u('</h%s>' % self.hdr))
-            self.hdr = None
-        else:
-            ans = appuifw2.popup_menu(map(u, ('H1', 'H2', 'H3', 'H4', 'H5', 'H6')))
-            if ans is None: return
-            self.hdr = ans + 1
-            self.editor.add(u('<h%s>' % self.hdr))
 
     def launchBrowser(self):
         if self.notSaved():
