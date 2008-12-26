@@ -16,7 +16,8 @@ import e32
 import key_codes
 import os
 
-VERSION = '0.6.a'
+UID = u"e3e34da2"
+VERSION = '0.6.c'
 
 htmltemplates = (
     '''<html>
@@ -96,9 +97,13 @@ class xText(object):
         self.replace_text = u('')
         self.old_indicator = self.editor.indicator_text
         self.funkey_timer = None
+        self.exit_key_handlers = (None, None) # ((u"Label", callback), (u"FnLabel", fn_callback))
 
     def dummy(self):
         appuifw2.note(u('Not implmented yet!'), 'error')
+
+    def bindExitKey(self, handler=None, fnhandler=None):
+        self.exit_key_handler = (handler, fnhandler)
     
     def notSaved(self):
         if self.editor.has_changed:
@@ -137,8 +142,12 @@ class xText(object):
         self.editor.bind(key_codes.EKeySelect,     self.moveMenu)
         self.editor.bind(key_codes.EKeyYes,        self.rebindFunKeys)
         self.old_indicator = self.editor.indicator_text
-        appuifw2.app.exit_key_handler = self.rightSoftkeyPressed
-        appuifw2.app.exit_key_text = u("Entity")
+#         appuifw2.app.exit_key_handler = self.rightSoftkeyPressed
+#         appuifw2.app.exit_key_text = u("Entity")
+        fnhandler = self.exit_key_handler[1]
+        if fnhandler is not None:
+            appuifw2.app.exit_key_handler = lambda : self.rightSoftkeyPressed(fnhandler[1])
+            appuifw2.app.exit_key_text = fnhandler[0]
         self.editor.indicator_text = u('Func')
         
     def rebindFunKeys(self):
@@ -151,8 +160,12 @@ class xText(object):
         self.editor.bind(key_codes.EKeyYes, self.yesKeyPressed)
         self.editor.bind(key_codes.EKeyStar, self.starKeyPressed)
         self.editor.indicator_text = self.old_indicator
-        appuifw2.app.exit_key_handler = self.insertTag
-        appuifw2.app.exit_key_text = u("Tag")
+#         appuifw2.app.exit_key_handler = self.insertTag
+#         appuifw2.app.exit_key_text = u("Tag")
+        handler = self.exit_key_handler[0]
+        if handler is not None:
+            appuifw2.app.exit_key_handler = handler[1]
+            appuifw2.app.exit_key_text = handler[0]
 
     def starKeyPressed(self):
         appuifw2.note(u('Star key pressed'))
@@ -162,9 +175,9 @@ class xText(object):
         self.rebindFunKeys()
         schedule(self.moveCursor, pos, cmd)
 
-    def rightSoftkeyPressed(self):
+    def rightSoftkeyPressed(self, callback):
         self.rebindFunKeys()
-        schedule(self.insertEntity)
+        schedule(callback)
 
     def moveCursor(self, pos, cmd):
         self.editor.set_pos(pos)
@@ -293,10 +306,14 @@ class HTMLEditor(xText):
         if self.notSaved():
             if not self.fileSave(): return
         self.app_lock.signal()
-        appuifw2.app.set_exit()
+        if appuifw2.app.uid() == UID:
+            appuifw2.app.set_exit() # running as app
 
     def aboutDlg(self):
-        appuifw2.query(u('S60 HTML Editor\nVersion %s\nCopyright (c) Dmitri Brechalov, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
+        appuifw2.query(u('S60 HTML Editor\nVersion %s\n(C) Dmitri Brechalov, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
+
+    def showUID(self):
+        appuifw2.query(appuifw2.app.uid(), 'query')
         
     def helpDlg(self):
         topics = (u('Call button works as functional key.\nCall + arrows: Page Up, Page Down, Line Start and Line End.'),
@@ -495,6 +512,7 @@ class HTMLEditor(xText):
                          (u("About"), self.aboutDlg),)),
             (u("Exit"), self.quit)
             ]
+        self.bindExitKey((u('Tag'), self.insertTag), (u('Entity'), self.insertEntity))
         self.editor.has_changed = False
         self.fileNew()
         e32.ao_yield()
