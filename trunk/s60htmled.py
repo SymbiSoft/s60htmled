@@ -102,6 +102,15 @@ class xText(object):
     def dummy(self):
         appuifw2.note(u('Not implmented yet!'), 'error')
 
+    #### Keyboard & Events
+
+    def quit(self):
+        if self.notSaved():
+            if not self.fileSave(): return
+        self.app_lock.signal()
+        if appuifw2.app.uid() == UID:
+            appuifw2.app.set_exit() # running as app
+
     def bindExitKey(self, handler=None, fnhandler=None):
         self.exit_key_handler = (handler, fnhandler)
     
@@ -178,6 +187,8 @@ class xText(object):
     def rightSoftkeyPressed(self, callback):
         self.rebindFunKeys()
         schedule(callback)
+
+    #### Cursor control, Search and Replace
 
     def moveCursor(self, pos, cmd):
         self.editor.set_pos(pos)
@@ -261,15 +272,17 @@ class xText(object):
         if self.doFind(self.find_text):
             self.doReplace(self.replace_text)
     
+    def findEOL(self):
+        self.doFind(u"\u2029")
+
+    #### Selection & Clipboard
+        
     def selectAll(self):
         self.editor.select_all()
         
     def selectNone(self):
         self.editor.clear_selection()
         
-    def findEOL(self):
-        self.doFind(u"\u2029")
-    
     def cut(self):
         if self.editor.can_cut():
             self.editor.cut()
@@ -294,37 +307,7 @@ class xText(object):
         else:
             appuifw2.note(u("Can't undo!"), "error")
 
-class HTMLEditor(xText):
-    '''HTML Editor. Uses appuifw2.Text
-    '''
-    version = VERSION
-    title = u('HTML Editor %s' % (version))
-    def __init__(self):
-        xText.__init__(self)
-    
-    def quit(self):
-        if self.notSaved():
-            if not self.fileSave(): return
-        self.app_lock.signal()
-        if appuifw2.app.uid() == UID:
-            appuifw2.app.set_exit() # running as app
-
-    def aboutDlg(self):
-        appuifw2.query(u('S60 HTML Editor\nVersion %s\n(C) Dmitri Brechalov, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
-
-    def showUID(self):
-        appuifw2.query(appuifw2.app.uid(), 'query')
-        
-    def helpDlg(self):
-        topics = (u('Call button works as functional key.\nCall + arrows: Page Up, Page Down, Line Start and Line End.'),
-                  u('Press Call + Select to go to the top/bottom of the text or goto line.'),
-                  u('Press right softkey to select and insert HTML tag.\nSelect the same tag once more to insert close tag.'),
-                  u('Select "Custom tag" to insert any tag.'),
-                  u('Press Call + Right softkey to insert HTML entity.'),
-                 )
-        for t in topics:
-            if not appuifw2.query(t, 'query', ok=u('Next'), cancel=u('Close')):
-                break
+    #### File operations
 
     def fileDialog(self, allowNew=False):
         if allowNew:
@@ -347,16 +330,6 @@ class HTMLEditor(xText):
         self.moveEvent()
         self.editor.has_changed = False
 
-    def fileTemplate(self):
-        if self.notSaved():
-            if not self.fileSave(): return
-        ans = appuifw2.popup_menu([u('Simple HTML'), u('HTML 4.01 Transitional')], u('Select template'))
-        if ans is None: return
-        self.fileNew()
-        self.editor.set(u(htmltemplates[ans]))
-        self.editor.set_pos(0)
-        self.editor.has_changed = False
-        
     def fileOpen(self):
         if self.notSaved():
             if not self.fileSave(): return
@@ -394,6 +367,50 @@ class HTMLEditor(xText):
             return self.fileSaveAs()
         else:
             return self.doSave()
+
+class HTMLEditor(xText):
+    '''HTML Editor. Uses appuifw2.Text
+    '''
+    version = VERSION
+    title = u('HTML Editor %s' % (version))
+#     def __init__(self):
+#         xText.__init__(self)
+
+    #### Help
+    
+    def aboutDlg(self):
+        appuifw2.query(u('S60 HTML Editor\nVersion %s\n(C) Dmitri Brechalov, 2008' % (self.version)), 'query', ok=u(''), cancel=u('Close'))
+
+    def showUID(self):
+        appuifw2.query(appuifw2.app.uid(), 'query')
+        
+    def helpDlg(self):
+        topics = (u('Call button works as functional key.\nCall + arrows: Page Up, Page Down, Line Start and Line End.'),
+                  u('Press Call + Select to go to the top/bottom of the text or goto line.'),
+                  u('Press right softkey to select and insert HTML tag.\nSelect the same tag once more to insert close tag.'),
+                  u('Select "Custom tag" to insert any tag.'),
+                  u('Press Call + Right softkey to insert HTML entity.'),
+                 )
+        for t in topics:
+            if not appuifw2.query(t, 'query', ok=u('Next'), cancel=u('Close')):
+                break
+
+    #### Extra file operations
+
+    def fileTemplate(self):
+        if self.notSaved():
+            if not self.fileSave(): return
+        ans = appuifw2.popup_menu([u('Simple HTML'), u('HTML 4.01 Transitional')], u('Select template'))
+        if ans is None: return
+        self.fileNew()
+        self.editor.set(u(htmltemplates[ans]))
+        self.editor.set_pos(0)
+        self.editor.has_changed = False
+        
+    def launchBrowser(self):
+        if not self.fname or self.notSaved():
+            if not self.fileSave(): return
+        appuifw2.Content_handler().open(u(self.fname.replace('/', '\\')))
 
     #### Working with tags
 
@@ -484,11 +501,6 @@ class HTMLEditor(xText):
 
     def addEntity(self, ent):
         self.editor.add(u('&%s;' % ent))
-
-    def launchBrowser(self):
-        if not self.fname or self.notSaved():
-            if not self.fileSave(): return
-        appuifw2.Content_handler().open(u(self.fname.replace('/', '\\')))
 
     def run(self):
         self.app_lock = e32.Ao_lock()
