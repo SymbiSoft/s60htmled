@@ -1,6 +1,8 @@
 # s60htmled.py: Simple HTML editor for S60 Ed.3 smartphones
 # 
 # Copyright (C) Dmitri Brechalov, 2008
+#
+# Project URL: http://code.google.com/p/s60htmled/
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -17,7 +19,7 @@ import key_codes
 import os
 
 UID = u"e3e34da2"
-VERSION = '0.6.c'
+VERSION = '0.7'
 
 htmltemplates = (
     '''<html>
@@ -387,9 +389,9 @@ class HTMLEditor(xText):
     def helpDlg(self):
         topics = (u('Call button works as functional key.\nCall + arrows: Page Up, Page Down, Line Start and Line End.'),
                   u('Press Call + Select to go to the top/bottom of the text or goto line.'),
-                  u('Press right softkey to select and insert HTML tag.\nSelect the same tag once more to insert close tag.'),
-                  u('Select "Custom tag" to insert any tag.'),
+                  u('Press right softkey to select and insert HTML tag.\nSelect "Custom tag" to insert any tag.'),
                   u('Press Call + Right softkey to insert HTML entity.'),
+                  u('More info and fresh version are available at http://code.google.com/p/s60htmled/'),
                  )
         for t in topics:
             if not appuifw2.query(t, 'query', ok=u('Next'), cancel=u('Close')):
