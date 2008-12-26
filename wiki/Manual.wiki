@@ -23,7 +23,7 @@ You *must* have [http://code.google.com/p/appuifw2/ appuifw2] extension module i
 
 Currently the program is available as SIS-file and as source code. If you have S60 3rd Ed. device, you can install it from the SIS-file as a standalone application with own button in main menu.
 
-Otherwise, you can simply copy the source code file to the {{\Python}} directory on the device or memory card (where Python is installed). Then start Python interpreter, press left softkey for the menu and select *Run script*. Select the scripts and press *OK*.
+Otherwise, you can simply copy the source code file to the {{Python}} directory on the device or memory card (where Python is installed). Then start Python interpreter, press left softkey for the menu and select *Run script*. Select the scripts and press *OK*.
 
 = Hot Keys =
 
