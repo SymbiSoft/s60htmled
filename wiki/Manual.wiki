@@ -23,7 +23,7 @@ You *must* have [http://code.google.com/p/appuifw2/ appuifw2] extension module i
 
 Currently the program is available as SIS-file and as source code. If you have S60 3rd Ed. device, you can install it from the SIS-file as a standalone application with own button in main menu.
 
-Otherwise, you can simply copy the source code file to the {{Python}} directory on the device or memory card (where Python is installed). Then start Python interpreter, press left softkey for the menu and select *Run script*. Select the scripts and press *OK*.
+Otherwise, you can simply copy the source code file to the `\Python` directory on the device or memory card (where Python is installed). Then start Python interpreter, press left softkey for the menu and select *Run script*. Select the scripts and press *OK*.
 
 = Hot Keys =
 
@@ -59,7 +59,7 @@ Press *Options* to open the main menu.
 
 = HTML Tag Insertion =
 
-To insert an HTML tag press *Right softke* (labeled *Tag*), select a tag and press *OK*. To select a tag you can simply scroll the list, or start typing to quickly find the necessary tag. Also, you can use *Custom...* option - just type the tag you need and press *OK*. Some tags requires attributes (like {{a}} or {{img}}). You will be prompted for the names of attributes. Press *Cancel* when finished. The tag will be inserted to the text. It will have both open and close tags if needed.
+To insert an HTML tag press *Right softke* (labeled *Tag*), select a tag and press *OK*. To select a tag you can simply scroll the list, or start typing to quickly find the necessary tag. Also, you can use *Custom...* option - just type the tag you need and press *OK*. Some tags requires attributes (like `a` or `img`). You will be prompted for the names of attributes. Press *Cancel* when finished. The tag will be inserted to the text. It will have both open and close tags if needed.
 
 Also you can select a text and insert tag using right softkey, selected text will be surrounded with selected tag.
 
