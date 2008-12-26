@@ -89,7 +89,6 @@ class xText(object):
     def __init__(self):
         self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
         self.editor.style = appuifw2.STYLE_BOLD
-#         self.editor.color = (0, 0, 0)
         self.fname = None
         self.tags = []
         self.hdr = None
@@ -199,9 +198,11 @@ class xText(object):
 
     def doFind(self, find_text, fwd=True):
         if fwd:
+            #### XXX FIXME: use get(pos, length) instead!
             txt = self.editor.get()[self.editor.get_pos():]
             i = txt.find(find_text)
         else:
+            #### XXX FIXME: use get(pos, length) instead!
             txt = self.editor.get()[:self.editor.get_pos()-1]
             i = txt.rfind(find_text)
         if i >= 0:
@@ -468,7 +469,7 @@ class HTMLEditor(xText):
         self.editor.add(u('&%s;' % ent))
 
     def launchBrowser(self):
-        if self.notSaved():
+        if not self.fname or self.notSaved():
             if not self.fileSave(): return
         appuifw2.Content_handler().open(u(self.fname.replace('/', '\\')))
 
