@@ -21,9 +21,9 @@ You *must* have [http://opensource.nokia.com/projects/pythonfors60/ Python for S
 
 You *must* have [http://code.google.com/p/appuifw2/ appuifw2] extension module installed on your device as well.
 
-Currently, the program is deployed as a single Python script. You should download the latest release and put the file {{{s60htmled.py}}} to the folder {{{!:Python}}} on your device.
+Currently the program is available as SIS-file and as source code. If you have S60 3rd Ed. device, you can install it from the SIS-file as a standalone application with own button in main menu.
 
-Then start Python interpreter, press left softkey for the menu and select *Run script*. Select the scripts and press *OK*.
+Otherwise, you can simply copy the source code file to the {{\Python}} directory on the device or memory card (where Python is installed). Then start Python interpreter, press left softkey for the menu and select *Run script*. Select the scripts and press *OK*.
 
 = Hot Keys =
 
@@ -51,6 +51,7 @@ Press *Options* to open the main menu.
      * *Open* - Load file. The current text will be replaced with contents of selected file.
      * *New* - Drop all text and clear the editor.
      * *New from template* - You can select simple HTML and HTML 4.0 transitional templates for the new file.
+     * *View in browser* - Open the file you edit in built-in browser.
    * *Help* - Short help.
      * *Help* - Display short help on the major functions of the editor.
      * *About* - Show copyright info.
@@ -58,11 +59,11 @@ Press *Options* to open the main menu.
 
 = HTML Tag Insertion =
 
-To insert an HTML tag press *Right softke* (labeled *Tag*), select a tag and press *OK*. To select a tag you can simply scroll the list, or start typing to quickly find the necessary tag.
+To insert an HTML tag press *Right softke* (labeled *Tag*), select a tag and press *OK*. To select a tag you can simply scroll the list, or start typing to quickly find the necessary tag. Also, you can use *Custom...* option - just type the tag you need and press *OK*. Some tags requires attributes (like {{a}} or {{img}}). You will be prompted for the names of attributes. Press *Cancel* when finished. The tag will be inserted to the text. It will have both open and close tags if needed.
 
-Also, you can use *Custom...* option - just type the tag you need and press *OK*.
+Also you can select a text and insert tag using right softkey, selected text will be surrounded with selected tag.
 
-The editor has a trivial control of opened tags for many tags. When you select the same tag next time, the editor will insert appropriate closing tag. For example, you want to insert a link into your text. You have selected *a href* from the menu for the first time, and you have recieved a string `<a href="">|` in your text. Then you have typed an URL and a label text. Now you have the following text: `<a href="http://code.google.com/">Google Code|` (Vertical line marks the cursor position). Now, to enter a closing tag, select *a href* once more and you will get: `<a href="http://code.google.com/">Google Code</a>|`. That's all!
+That's all!
 
 = Screenshots =
 
