@@ -17,6 +17,7 @@ import appuifw2
 import e32
 import key_codes
 import os, sys
+from utils import *
 
 class xText(object):
     '''eXtended Text editor
