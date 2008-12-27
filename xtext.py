@@ -32,7 +32,8 @@ class xText(object):
         self.replace_text = u('')
         self.old_indicator = self.editor.indicator_text
         self.funkey_timer = None
-        self.exit_key_handlers = (None, None) # ((u"Label", callback), (u"FnLabel", fn_callback))
+        self.exit_key_handlers = (None, None)  # ((u"Label", callback), (u"FnLabel", fn_callback))
+        self.select_key_handler = (None, None) # (callback, fn_callback)
 
     def dummy(self):
         appuifw2.note(u('Not implmented yet!'), 'error')
@@ -41,6 +42,9 @@ class xText(object):
 
     def bindExitKey(self, handler=None, fnhandler=None):
         self.exit_key_handler = (handler, fnhandler)
+    
+    def bindSelectKey(self, handler=None, fnhandler=None):
+        self.select_key_handler = (handler, fnhandler)
     
     def notSaved(self):
         if self.editor.has_changed:
@@ -76,14 +80,16 @@ class xText(object):
         self.editor.bind(key_codes.EKeyDownArrow,  lambda : self.arrowKeyPressed(pos, appuifw2.EFPageDown))
         self.editor.bind(key_codes.EKeyLeftArrow,  lambda : self.arrowKeyPressed(pos, appuifw2.EFLineBeg))
         self.editor.bind(key_codes.EKeyRightArrow, lambda : self.arrowKeyPressed(pos, appuifw2.EFLineEnd))
-        self.editor.bind(key_codes.EKeySelect,     self.moveMenu)
         self.editor.bind(key_codes.EKeyYes,        self.rebindFunKeys)
+        fnhandler = self.select_key_handler[1]
+        if fnhandler is not None:
+            self.editor.bind(key_codes.EKeySelect, lambda : self.funkeyPressed(fnhandler))
+        else:
+            self.editor.bind(key_codes.EKeySelect, self.moveMenu)
         self.old_indicator = self.editor.indicator_text
-#         appuifw2.app.exit_key_handler = self.rightSoftkeyPressed
-#         appuifw2.app.exit_key_text = u("Entity")
         fnhandler = self.exit_key_handler[1]
         if fnhandler is not None:
-            appuifw2.app.exit_key_handler = lambda : self.rightSoftkeyPressed(fnhandler[1])
+            appuifw2.app.exit_key_handler = lambda : self.funkeyPressed(fnhandler[1])
             appuifw2.app.exit_key_text = fnhandler[0]
         self.editor.indicator_text = u('Func')
         
@@ -92,13 +98,16 @@ class xText(object):
         if in_time:
             self.funkey_timer.cancel()
             self.funkey_timer = None
-        for key in (key_codes.EKeyUpArrow, key_codes.EKeyDownArrow, key_codes.EKeyLeftArrow, key_codes.EKeyRightArrow, key_codes.EKeySelect):
+        for key in (key_codes.EKeyUpArrow, key_codes.EKeyDownArrow, key_codes.EKeyLeftArrow, key_codes.EKeyRightArrow):
             self.editor.bind(key, lambda : None)
         self.editor.bind(key_codes.EKeyYes, self.yesKeyPressed)
         self.editor.bind(key_codes.EKeyStar, self.starKeyPressed)
         self.editor.indicator_text = self.old_indicator
-#         appuifw2.app.exit_key_handler = self.insertTag
-#         appuifw2.app.exit_key_text = u("Tag")
+        handler = self.select_key_handler[0]
+        if handler is not None:
+            self.editor.bind(key_codes.EKeySelect, handler)
+        else:
+            self.editor.bind(key_codes.EKeySelect, lambda : None)
         handler = self.exit_key_handler[0]
         if handler is not None:
             appuifw2.app.exit_key_handler = handler[1]
@@ -112,7 +121,7 @@ class xText(object):
         self.rebindFunKeys()
         schedule(self.moveCursor, pos, cmd)
 
-    def rightSoftkeyPressed(self, callback):
+    def funkeyPressed(self, callback):
         self.rebindFunKeys()
         schedule(callback)
 
