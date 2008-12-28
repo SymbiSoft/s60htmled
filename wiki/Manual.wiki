@@ -11,7 +11,7 @@
 
 The editor is written in *Python* programming language.
 
-This manual describes version 0.3 of the editor.
+This manual describes version 0.7 of the editor.
 
 Copyright (C) Dmitri Brechalov, 2008
 
