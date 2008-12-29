@@ -68,15 +68,10 @@ class HTMLEditor(xText):
         appuifw2.query(appuifw2.app.uid(), 'query')
         
     def helpDlg(self):
-        topics = (u('Call button works as functional key.\nCall + arrows: Page Up, Page Down, Line Start and Line End.'),
-                  u('Press Call + Select to go to the top/bottom of the text or goto line.'),
-                  u('Press right softkey to select and insert HTML tag.\nSelect "Custom tag" to insert any tag.'),
-                  u('Press Call + Right softkey to insert HTML entity.'),
-                  u('More info and fresh version are available at http://code.google.com/p/s60htmled/'),
-                 )
-        for t in topics:
-            if not appuifw2.query(t, 'query', ok=u('Next'), cancel=u('Close')):
-                break
+        progpath = os.path.split(sys.argv[0])[0]
+        manpage = os.path.join(progpath, 'manual.html').replace('/', '\\')
+        appuifw2.note(manpage)
+        appuifw2.Content_handler().open(u(manpage))
 
     #### Extra file operations
 
