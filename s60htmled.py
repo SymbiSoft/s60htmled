@@ -25,7 +25,7 @@ from utils import *
 from xtext import xText
 
 UID = u"e3e34da2"
-VERSION = '0.7.1'
+VERSION = '0.8.1'
 
 htmltemplates = (
     '''<html>
@@ -56,8 +56,12 @@ class HTMLEditor(xText):
     '''
     version = VERSION
     title = u('HTML Editor %s' % (version))
-#     def __init__(self):
-#         xText.__init__(self)
+    def __init__(self):
+        progpath = os.path.split(sys.argv[0])[0]
+        confpath = progpath[:2] + '\\System\\Data\\HTMLEd'
+        if not os.path.exists(confpath):
+            os.mkdir(confpath)
+        xText.__init__(self, os.path.join(confpath, 'htmledconf'))
 
     #### Help
     
@@ -69,8 +73,10 @@ class HTMLEditor(xText):
         
     def helpDlg(self):
         progpath = os.path.split(sys.argv[0])[0]
+        if appuifw2.app.uid() != UID: # running as a script
+            progpath = progpath[:2] + '/Python'
         manpage = os.path.join(progpath, 'manual.html').replace('/', '\\')
-        appuifw2.note(manpage)
+        appuifw2.note(u(manpage))
         appuifw2.Content_handler().open(u(manpage))
 
     #### Extra file operations
@@ -205,6 +211,7 @@ class HTMLEditor(xText):
             (u("Search"), ((u("Find Forward"), self.findTextForward),
                            (u("Find Backward"), self.findTextBackward),
                            (u("Replace"), self.replaceText))),
+            (u('Settings'), self.settingsDialog),
             (u("Help"), ((u("Help"), self.helpDlg),
                          (u("About"), self.aboutDlg),)),
             (u("Exit"), self.quit)

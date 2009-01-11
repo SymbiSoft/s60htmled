@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION='0.7.1'
+VERSION='0.8.1'
 # make distro
 rm -rf build
 mkdir -p build

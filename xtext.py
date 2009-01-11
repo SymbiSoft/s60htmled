@@ -22,9 +22,10 @@ from utils import *
 class xText(object):
     '''eXtended Text editor
     '''
-    def __init__(self):
-        self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=True)
-        self.editor.style = appuifw2.STYLE_BOLD
+    def __init__(self, config_filename=None):
+        self.configFile = config_filename
+        self.loadSettings()
+        self.editor = appuifw2.Text(move_callback=self.moveEvent, edit_callback=self.changeEvent, skinned=(self.settings['Skinned']=='Yes'))
         self.fname = None
         self.tags = []
         self.hdr = None
@@ -34,10 +35,65 @@ class xText(object):
         self.funkey_timer = None
         self.exit_key_handlers = (None, None)  # ((u"Label", callback), (u"FnLabel", fn_callback))
         self.select_key_handler = (None, None) # (callback, fn_callback)
+        self.setup()
 
     def dummy(self):
         appuifw2.note(u('Not implmented yet!'), 'error')
 
+    #### Customization
+
+    def customSettings(self, options):
+        '''Options must be dict
+        '''
+        self.settings.update(options)
+
+    def loadSettings(self):
+        self.settings = dict()
+        for (k, v) in (('Skinned', 'Yes'), ('Style', 'Bold')):
+            if not self.settings.has_key(k):
+                self.settings[k] = v
+        if self.configFile is not None:
+            try:
+                for line in open(self.configFile, 'r'):
+                    (k, v) = line.split('=', 1)
+                    self.settings[k.strip().capitalize()] = v.strip().capitalize()
+            except IOError:
+                pass
+
+    def checkConfigPath():
+        if self.configFile is None:
+            return
+        path = self.configFile.split('\\')
+        for i in range(len(path)-1):
+            p = '\\'.join(path[0:i])
+            if not os.path.exists(p):
+                os.mkdir(p)
+
+    def saveSettings(self):
+        if self.configFile is None:
+            return
+        self.checkConfigPath()
+        f = open(self.configFile, 'w')
+        for k, v in self.settings.items():
+            f.write('%s=%s\n' % (k, v))
+        f.close()
+
+    def setup(self):
+        if self.settings['Style'] == 'Bold':
+            self.editor.style = appuifw2.STYLE_BOLD
+
+    def settingsDialog(self):
+        self.options = [
+            (u('Screen'), 'combo', ([u('Normal'), u('Large')], 0)),
+            (u('Skinned'), 'combo', ([u('Yes'), u('No')], 0)),
+            (u('Font'), 'combo', (appuifw2.available_fonts(), 0)),
+            (u('Style'), 'combo', ([u('Regular'), u('Bold')], 0)),
+            (u('Size'), 'number', 10),
+#             (u('Color'), 'combo', (COLOR_LIST, 0)),
+#             (u('Background'), 'combo', (COLOR_LIST, 0)),
+            ]
+        self.options = dialog(self.options)
+        
     #### Keyboard & Events
 
     def bindExitKey(self, handler=None, fnhandler=None):
@@ -101,7 +157,6 @@ class xText(object):
         for key in (key_codes.EKeyUpArrow, key_codes.EKeyDownArrow, key_codes.EKeyLeftArrow, key_codes.EKeyRightArrow):
             self.editor.bind(key, lambda : None)
         self.editor.bind(key_codes.EKeyYes, self.yesKeyPressed)
-        self.editor.bind(key_codes.EKeyStar, self.starKeyPressed)
         self.editor.indicator_text = self.old_indicator
         handler = self.select_key_handler[0]
         if handler is not None:
@@ -202,11 +257,23 @@ class xText(object):
             self.editor.set_selection(pos, pos-len(self.find_text))
         
     def replaceText(self):
+        LIMITY = 50
         ans = appuifw2.multi_query(u("Find"), u("Replace"))
         if ans is None: return
         self.find_text = ans[0]
         self.replace_text = ans[1]
-        if self.doFind(self.find_text):
+        while self.doFind(self.find_text):
+            pos = self.editor.get_pos()
+            dy = 0             # make sure the found text is visible
+            while True:        # behind the query dialog
+                x, y = self.editor.pos2xy(pos)
+                if y <= LIMITY or dy == y:
+                    break # cannot scroll any more - end of text
+                dy = y
+                self.editor.move_display(appuifw2.EFLineDown)
+            self.editor.set_selection(pos, pos-len(self.find_text))
+            if not appuifw2.query(u('Replace?'), 'query', ok=u('Yes'), cancel=u('Cancel')):
+                break
             self.doReplace(self.replace_text)
     
     def findEOL(self):
